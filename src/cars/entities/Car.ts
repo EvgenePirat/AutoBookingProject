@@ -4,9 +4,6 @@ import { Order } from 'src/orders/entities/Order';
 @Table({ tableName: 'cars' })
 export class Car extends Model<Car> {
 
-    @Column({ type: DataType.TEXT, allowNull: true })
-    description?: string | null;
-
     @Column({ type: DataType.STRING, allowNull: false })
     brand: string;
 
