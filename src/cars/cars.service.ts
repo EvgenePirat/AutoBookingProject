@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { Car } from './entities/Car';
@@ -39,7 +39,7 @@ export class CarsService {
             return CarMapper.carToCarDto(createdCar);
         } catch (error) {
             await transaction.rollback();
-            console.error('DB Validation Error:', error);
+            
             throw new InternalServerErrorException('Error creating car!');
         }
     }
@@ -48,6 +48,11 @@ export class CarsService {
         const transaction = await this.sequelize.transaction();
     
         try {
+
+            if (updateCarDto.id && updateCarDto.id != id) {
+                throw new BadRequestException(`Parametr ID ${id} does not match update model car ID ${updateCarDto.id}`);
+            }
+
             const car = await this.carRepository.findByPk(id, { transaction });
     
             if (!car) {
@@ -62,6 +67,11 @@ export class CarsService {
             return CarMapper.carToCarDto(car);
         } catch (error) {
             await transaction.rollback();
+
+            if (error instanceof NotFoundException || error instanceof BadRequestException) {
+                throw error; 
+            }
+
             throw new InternalServerErrorException('Error updating car!');
         }
     }
@@ -82,6 +92,11 @@ export class CarsService {
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();
+
+            if (error instanceof NotFoundException) {
+                throw error; 
+            }
+
             throw new InternalServerErrorException('Error deleting car!');
         }
     }
