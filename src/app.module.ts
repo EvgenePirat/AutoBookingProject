@@ -4,24 +4,34 @@ import { CarsModule } from './cars/cars.module';
 import { OrdersModule } from './orders/orders.module';
 import { Car } from './cars/entities/Car';
 import { Order } from './orders/entities/Order';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config'; // Додано ConfigService
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), 
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      models: [Car, Order],
-      autoLoadModels: true,
-      synchronize: true,
+
+    ConfigModule.forRoot({
+      isGlobal: true, 
+      envFilePath: '.env', 
     }),
+
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule], 
+      useFactory: (configService: ConfigService) => ({
+        dialect: 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'), 
+        username: configService.get<string>('DB_USER'), 
+        password: configService.get<string>('DB_PASS'), 
+        database: configService.get<string>('DB_NAME'), 
+        models: [Car, Order], 
+        autoLoadModels: true, 
+        synchronize: true, 
+      }),
+      inject: [ConfigService], 
+    }),
+
     CarsModule,
     OrdersModule,
   ],
