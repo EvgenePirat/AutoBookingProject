@@ -8,6 +8,8 @@ import { OrderDto } from './dto/response/OrderDto ';
 import { CreateOrderDto } from './dto/request/create-order-dto';
 import { UpdateOrderDto } from './dto/request/update-order.dto';
 import { NotEnoughCarsException } from 'src/common/exceptions/not-enougth-cars.exception';
+import { CarsService } from 'src/cars/cars.service';
+import { CarNotAvailableException } from 'src/common/exceptions/car-not-available.exception';
 
 @Injectable()
 export class OrdersService {
@@ -15,6 +17,7 @@ export class OrdersService {
         @InjectModel(Order) private readonly orderRepository: typeof Order,
         @InjectModel(Car) private readonly carRepository: typeof Car,
         private readonly sequelize: Sequelize,
+        private readonly carsService: CarsService,
     ) { }
 
     private calculateTotalPrice(startDate: Date, endDate: Date, hourlyRate: number, quantityCars: number): number {
@@ -72,6 +75,16 @@ export class OrdersService {
                 throw new NotFoundException(`Car by ID ${createOrderDto.carId} not found!`);
             }
 
+            const isAvailable = await this.carsService.isCarAvailable(
+                car.id,
+                new Date(createOrderDto.startDate),
+                new Date(createOrderDto.endDate)
+            );
+    
+            if (!isAvailable) {
+                throw new CarNotAvailableException(car.id, createOrderDto.startDate, createOrderDto.endDate);
+            }
+
             if (car.availableQuantity < createOrderDto.quantity) {
                 throw new NotEnoughCarsException(`Not enough cars available for ID ${car.id}`);
             }
@@ -102,7 +115,7 @@ export class OrdersService {
         } catch (error) {
             await transaction.rollback();
 
-            if (error instanceof NotEnoughCarsException) {
+            if (error instanceof NotFoundException || error instanceof NotEnoughCarsException || error instanceof CarNotAvailableException) {
                 throw error;
             }
 
@@ -132,6 +145,17 @@ export class OrdersService {
             }
 
             const car = order.car;
+
+            const isAvailable = await this.carsService.isCarAvailable(
+                car.id,
+                new Date(updateOrderDto.startDate || order.startDate),
+                new Date(updateOrderDto.endDate || order.endDate),
+                order.id
+            );
+    
+            if (!isAvailable) {
+                throw new CarNotAvailableException(car.id, updateOrderDto.startDate || order.startDate, updateOrderDto.endDate || order.endDate);
+            }
     
             if (updateOrderDto.quantity && updateOrderDto.quantity !== order.quantity) {
                 const quantityDifference = updateOrderDto.quantity - order.quantity;
@@ -161,7 +185,7 @@ export class OrdersService {
         } catch (error) {
             await transaction.rollback();
     
-            if (error instanceof NotFoundException || error instanceof BadRequestException || error instanceof NotEnoughCarsException) {
+            if (error instanceof NotFoundException || error instanceof BadRequestException || error instanceof NotEnoughCarsException || error instanceof CarNotAvailableException) {
                 throw error;
             }
     
