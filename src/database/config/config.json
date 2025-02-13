@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "eugene2002",
+    "database": "auto_booking_db",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "eugene2002",
+    "database": "auto_booking_db",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "eugene2002",
+    "database": "auto_booking_db",
+    "host": "localhost",
+    "dialect": "postgres"
+  }
+}
