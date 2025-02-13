@@ -1,3 +1,4 @@
+import { OrderMapper } from "src/orders/mapper/OrderMapper";
 import { CarDto } from "../dto/response/car-dto";
 import { Car } from "../entities/Car";
 
@@ -11,6 +12,7 @@ export class CarMapper {
             color: car.color,
             pricePerHour: car.pricePerHour,
             availableQuantity: car.availableQuantity,
+            orders: car.orders ? OrderMapper.orderToOrderDtoArray(car.orders) : []
         };
     }
 

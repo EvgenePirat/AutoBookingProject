@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { OrderDto } from 'src/orders/dto/response/OrderDto ';
 
 export class CarDto {
     @ApiProperty({
@@ -42,4 +43,18 @@ export class CarDto {
         example: 10,
     })
     availableQuantity: number;
+
+    @ApiProperty({
+        description: 'List of orders associated with this car',
+        type: [OrderDto],
+        example: [
+            {
+                id: 1,
+                carId: 1,
+                startDate: '2023-10-01T10:00:00Z',
+                endDate: '2023-10-05T10:00:00Z',
+            }
+        ],
+    })
+    orders: OrderDto[];
 }
