@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { CarsService } from './cars.service';
 import { CreateCarDto } from './dto/request/create-car-dto';
 import { UpdateCarDto } from './dto/request/update-car-dto';
@@ -9,21 +9,47 @@ import { LogRequest } from 'src/common/decorators/log-request-response.decorator
 @ApiTags('Car')
 @Controller('cars')
 export class CarsController {
-  constructor(private readonly carsService: CarsService) {}
+  constructor(private readonly carsService: CarsService) { }
+
+  @Get("include/all")
+  @ApiResponse({ status: 200, description: 'List of all cars', type: [CarDto] })
+  @LogRequest()
+  async getAllCarsWithAllInclude(): Promise<CarDto[]> {
+    return this.carsService.getAllWithAllInclude();
+  }
 
   @Get()
   @ApiResponse({ status: 200, description: 'List of all cars', type: [CarDto] })
   @LogRequest()
-  async getAllCars(): Promise<CarDto[]> {
-    return this.carsService.getAll();
+  async getAllCarsWithoutInclude(): Promise<CarDto[]> {
+    return this.carsService.getAllWithoutInclude();
   }
 
   @Get(':id')
   @ApiResponse({ status: 200, description: 'Car details retrieved successfully', type: CarDto })
   @ApiResponse({ status: 404, description: 'Car not found' })
   @LogRequest()
-  async getCarById(@Param('id') id: number): Promise<CarDto> {
-    return this.carsService.getCarById(id);
+  async getCarByIdWithoutInclude(@Param('id') id: number): Promise<CarDto> {
+    return this.carsService.getCarByIdWithoutInclude(id);
+  }
+
+  @Get('include/:id')
+  @ApiResponse({ status: 200, description: 'Car details retrieved successfully', type: CarDto })
+  @ApiResponse({ status: 404, description: 'Car not found' })
+  @LogRequest()
+  async getCarByIdWithAllInclude(@Param('id') id: number): Promise<CarDto> {
+    return this.carsService.getCarByIdWithAllInclude(id);
+  }
+
+  @Get(':id/availability')
+  @ApiResponse({ status: 200, description: 'Availability status retrieved successfully' })
+  @LogRequest()
+  async checkCarAvailability(
+    @Param('id') id: number,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string
+  ): Promise<boolean> {
+    return this.carsService.isCarAvailable(id, new Date(startDate), new Date(endDate));
   }
 
   @Post()

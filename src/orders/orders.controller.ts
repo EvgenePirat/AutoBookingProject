@@ -48,6 +48,16 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto);
   }
 
+  @Post('bulk')
+  @ApiResponse({ status: 201, description: 'Multiple orders successfully created', type: [OrderDto] })
+  @ApiResponse({ status: 400, description: 'Invalid input data for creating orders' })
+  @LogRequest()
+  async createMultipleOrders(
+    @Body() createOrdersDto: CreateOrderDto[]
+  ): Promise<OrderDto[]> {
+    return this.ordersService.createMultipleOrders(createOrdersDto);
+  }
+
   @Put(':id')
   @ApiResponse({ status: 200, description: 'Order successfully updated', type: OrderDto })
   @ApiResponse({ status: 404, description: 'Order not found' })
